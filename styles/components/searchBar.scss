@@ -1,0 +1,33 @@
+.search-bar {
+  position: relative;
+  width: fit-content;
+
+  .search-bar-input {
+    width: 954px;
+    height: 72px;
+    border-radius: 11px;
+    padding: 0 20px;
+    font-size: 16px;
+  }
+
+  .search-bar-button {
+    .search-bar-img {
+      width: 52px;
+      height: 52px;
+      background-color: $black;
+      padding: 10px;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 10px;
+      border-radius: 10px;
+    }
+  }
+
+  .search-bar-value {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+  }
+}

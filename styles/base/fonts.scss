@@ -1,0 +1,13 @@
+@font-face {
+  font-family: manrope;
+  src: url(../../fonts/Manrope-VariableFont_wght.ttf);
+}
+
+@font-face {
+  font-family: anton;
+  src: url(../../fonts/Anton-Regular.ttf);
+}
+
+* {
+  font-family: manrope, "sans-serif";
+}

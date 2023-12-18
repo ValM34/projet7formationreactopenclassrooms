@@ -1,0 +1,138 @@
+.filters-container {
+  position: relative;
+  margin-top: 30px;
+  height: 72px;
+  display: block;
+  margin-bottom: 30px;
+
+  .select-filter-container {
+    border-radius: 11px;
+    background-color: $white;
+    width: 230px;
+  
+    .select-filter-subcontainer {
+      max-height: 315px;
+      overflow-y: auto;
+      overflow-x: hidden;
+  
+      .select-filter {
+        height: 56px;
+        position: relative;
+        padding: 0 16px;
+
+        .filter-name {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      
+        .filter-btn {
+          position: absolute;
+          top: 50%;
+          right: 16px;
+          transform: translate(0, -50%) rotate(180deg);
+        }
+      }
+  
+      .content-filter {
+        margin-top: 10px;
+        display: none;
+
+        &.active {
+          display: block;
+        }
+
+        div {
+          padding: 5px 16px;
+          display: none;
+
+          &.active {
+            display: block;
+          }
+
+          img {
+            display: none;
+          }
+
+          &:hover {
+            cursor: pointer;
+            background-color: $yellow;
+          }
+
+          &.is-selected {
+            background-color: $yellow;
+            display: flex;
+            justify-content: space-between;
+
+            img {
+              display: block;
+            }
+          }
+        }
+      }
+    }
+  
+    .filter-input-container {
+      position: relative;
+      margin: 0 16px;
+      display: none;
+
+      &.active {
+        display: block;
+      }
+  
+      input {
+        border-radius: 2px;
+        border: 1px solid $grey;
+        height: 36px;
+        margin: auto;
+        padding-left: 10px;
+        padding-right: 50px;
+        width: 100%;
+      }
+  
+      .input-filter-search-img {
+        position: absolute;
+        right: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .input-filter-close-img {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  
+    .ingredient-name {
+      padding: 10px 16px;
+  
+      &:hover {
+        background-color: $yellow;
+        cursor: pointer;
+      }
+    }
+  
+    &:nth-child(1) {
+      position: absolute;
+      left: 0;
+      z-index: 1;
+      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    }
+    
+    &:nth-child(2) {
+      position: absolute;
+      left: 300px;
+      z-index: 1;
+      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    }
+    &:nth-child(3) {
+      position: absolute;
+      left: 600px;
+      z-index: 1;
+      box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+    }
+  }
+}
