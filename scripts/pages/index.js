@@ -3,6 +3,15 @@ window.addEventListener('load', () => {
     .then(response => response.json())
     .then(recipes => {
 
+      // Show all recipes on page load
+      const activesFilters = getActivesFilters();
+      let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+      let recipesCardElements = createRecipesCards(recipesCard);
+      const recipesContainer = document.querySelector('#recipes_container');
+      recipesCardElements.forEach((recipeCardElement) => {
+        recipesContainer.appendChild(recipeCardElement);
+      })
+
       function getFilters(recipes) {
         function addToList(filtersList, filter) {
           if(!filtersList.includes(filter)) {
@@ -34,18 +43,16 @@ window.addEventListener('load', () => {
         let recipesThatMatchWithAppliancesFilters = [];
         let recipesThatMatchWithUstensilsFilters = [];
 
-        // Filtre les recettes en fonction des filtres sélectionnés
+        // Push recipes by filters
         function filter (recipe, filtersListByRecipe, selectedFiltersList, arrayToModify) {
           if (selectedFiltersList.every((selectedFilter) => filtersListByRecipe.includes(selectedFilter))) {
             arrayToModify.push(recipe);
           }
         }
 
-        // Filtrer les recettes en fonction de la liste des ingrédients disponibles
+        // Filter recipes based on selected ingredients
         if (ingredientsFilters.length > 0) {
-          // Pour chaque recette si la recette contient tous les filtres alors on la push dans la liste newRecipesList
           recipes.forEach((recipe) => {
-            // Les ingrédients sont des objets, j'ai besoin d'un tableau de chaînes de caractères des noms d'ingrédients par recette
             const ingredientsListByRecipe = [];
             recipe.ingredients.forEach((ingredient) => {
               ingredientsListByRecipe.push(ingredient.ingredient);
@@ -53,29 +60,24 @@ window.addEventListener('load', () => {
             filter (recipe, ingredientsListByRecipe, ingredientsFilters, recipesThatMatchWithIngredientsFilters);
           });
         } else {
-          // Si aucun filtre d'ingrédient n'est appliqué, alors on push toutes les recettes
           recipesThatMatchWithIngredientsFilters = recipes;
         }
 
-        // Filtrer les recettes en fonction de la liste des appareils disponibles
+        // Filter recipes based on selected appliances
         if (appliancesFilters.length > 0) {
-          // Pour chaque recette si la recette contient tous les filtres alors on la push dans la liste recipesThatMatchWithAppliancesFilters
           recipesThatMatchWithIngredientsFilters.forEach((recipe) => {
             filter (recipe, recipe.appliance, appliancesFilters, recipesThatMatchWithAppliancesFilters);
           });
         } else {
-          // Si aucun filtre d'appareil n'est appliqué, alors on push toutes les recettes
           recipesThatMatchWithAppliancesFilters = recipesThatMatchWithIngredientsFilters;
         }
 
-        // Filtrer les recettes en fonction de la liste des ustensiles disponibles
+        // Filter recipes based on selected ustensils
         if (ustensilsFilters.length > 0) {
-          // Pour chaque recette si la recette contient tous les filtres alors on la push dans la liste recipesThatMatchWithUstensilsFilters
           recipesThatMatchWithAppliancesFilters.forEach((recipe) => {
             filter (recipe, recipe.ustensils, ustensilsFilters, recipesThatMatchWithUstensilsFilters);
           });
         } else {
-          // Si aucun filtre d'ustensil n'est appliqué, alors on push toutes les recettes
           recipesThatMatchWithUstensilsFilters = recipesThatMatchWithAppliancesFilters;
         }
 
@@ -83,16 +85,6 @@ window.addEventListener('load', () => {
 
         return newRecipesList;
       }
-
-      //let recipesCard = getRecipesByFilters(recipes, ['Lait de coco', 'Jus de citron'], ['Blender'], ['cuillère à Soupe', 'verres', 'presse citron']);
-      // Je fais apparaître les recettes non filtrés sur la page
-      const activesFilters = getActivesFilters();
-      let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-      let recipesCardElements = createRecipesCards(recipesCard);
-      const recipesContainer = document.querySelector('#recipes_container');
-      recipesCardElements.forEach((recipeCardElement) => {
-        recipesContainer.appendChild(recipeCardElement);
-      })
 
       function searchRecipes(inputValue, recipes) {
         let searchResult = [];
@@ -105,10 +97,9 @@ window.addEventListener('load', () => {
         return searchResult;
       }
 
-      // Gestion de la barre principale de recherche
+      // Handle main search bar
       const mainSearchBar = document.querySelector("#search");
       mainSearchBar.addEventListener('change', (e) => {
-        // Récupérer la liste actuelle des filtres actifs, récupérer la liste actuelle des recettes puis réaliser la recherche en fonction des recettes
         const activesFilters = getActivesFilters();
         const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
         const newRecipesList = searchRecipes(e.target.value, recipesByFilters);
@@ -137,12 +128,9 @@ window.addEventListener('load', () => {
         return { ingredientsFilters, appliancesFilters, ustensilsFilters };
       }
 
-      // Refaire le fonctionnement du dropdown mais dans une fonction qui marcherait pour les 3.
       function handleDropdown(type) {
-        // Afficher les filtres disponibles quand j'ouvre le dropdown ingrédient
         const ingredientDropdownFilters = document.querySelector(`#select_${type}s_filter`);
         ingredientDropdownFilters.addEventListener('click', () => {
-          // Je récupère la liste des recettes pour afficher une liste des filtres correcte
           const activesFilters = getActivesFilters();
           let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
           const { ingredientsList, appliancesList, ustensilsList } = getFilters(recipesCard);
