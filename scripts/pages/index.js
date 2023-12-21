@@ -13,6 +13,8 @@ window.addEventListener('load', () => {
       })
 
       function getFilters(recipes) {
+        const mainSearchBar = document.querySelector("#search");
+        const recipeListByInputValue = searchRecipes(mainSearchBar.value, recipes);
         function addToList(filtersList, filter) {
           if(!filtersList.includes(filter)) {
             filtersList.push(filter);
@@ -21,7 +23,7 @@ window.addEventListener('load', () => {
         const ingredientsList = [];
         const appliancesList = [];
         const ustensilsList = [];
-        recipes.forEach((recipe) => {
+        recipeListByInputValue.forEach((recipe) => {
           // Push list of ingredients
           recipe.ingredients.forEach((ingredient) => {
             addToList(ingredientsList, ingredient.ingredient);
@@ -43,6 +45,9 @@ window.addEventListener('load', () => {
         let recipesThatMatchWithAppliancesFilters = [];
         let recipesThatMatchWithUstensilsFilters = [];
 
+        const mainSearchBar = document.querySelector("#search");
+        const recipeListByInputValue = searchRecipes(mainSearchBar.value, recipes);
+
         // Push recipes by filters
         function filter (recipe, filtersListByRecipe, selectedFiltersList, arrayToModify) {
           if (selectedFiltersList.every((selectedFilter) => filtersListByRecipe.includes(selectedFilter))) {
@@ -52,7 +57,7 @@ window.addEventListener('load', () => {
 
         // Filter recipes based on selected ingredients
         if (ingredientsFilters.length > 0) {
-          recipes.forEach((recipe) => {
+          recipeListByInputValue.forEach((recipe) => {
             const ingredientsListByRecipe = [];
             recipe.ingredients.forEach((ingredient) => {
               ingredientsListByRecipe.push(ingredient.ingredient);
@@ -60,7 +65,7 @@ window.addEventListener('load', () => {
             filter (recipe, ingredientsListByRecipe, ingredientsFilters, recipesThatMatchWithIngredientsFilters);
           });
         } else {
-          recipesThatMatchWithIngredientsFilters = recipes;
+          recipesThatMatchWithIngredientsFilters = recipeListByInputValue;
         }
 
         // Filter recipes based on selected appliances
@@ -87,9 +92,17 @@ window.addEventListener('load', () => {
       }
 
       function searchRecipes(inputValue, recipes) {
+        if(inputValue.length < 3) {
+          
+          return recipes;
+        }
         let searchResult = [];
         recipes.forEach((recipe) => {
-          if(recipe.name.toLowerCase().includes(inputValue.toLowerCase()) || recipe.description.toLowerCase().includes(inputValue.toLowerCase())){
+          if(
+            recipe.name.toLowerCase().includes(inputValue.toLowerCase()) || 
+            recipe.description.toLowerCase().includes(inputValue.toLowerCase()) || 
+            !recipe.ingredients.every((ingredient) => ingredient.ingredient.toLowerCase().includes(inputValue.toLowerCase()) === false)
+          ) {
             searchResult.push(recipe);
           }
         })
@@ -98,17 +111,36 @@ window.addEventListener('load', () => {
       }
 
       // Handle main search bar
+      let lastInputValueLength;
       const mainSearchBar = document.querySelector("#search");
-      mainSearchBar.addEventListener('change', (e) => {
-        const activesFilters = getActivesFilters();
-        const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-        const newRecipesList = searchRecipes(e.target.value, recipesByFilters);
-        let recipesCardElements = createRecipesCards(newRecipesList);
-        const recipesContainer = document.querySelector('#recipes_container');
-        recipesContainer.textContent = "";
-        recipesCardElements.forEach((recipeCardElement) => {
-          recipesContainer.appendChild(recipeCardElement);
-        })
+      mainSearchBar.addEventListener('input', (e) => {
+        if(e.target.value.length >= 3) {
+          const activesFilters = getActivesFilters();
+          const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+          const newRecipesList = searchRecipes(e.target.value, recipesByFilters);
+          const recipesContainer = document.querySelector('#recipes_container');
+          if(newRecipesList.length === 0) {
+            recipesContainer.textContent = `Aucune recette ne contient "${e.target.value}" vous pouvez chercher « tarte aux pommes », « poisson », etc.`;
+          } else {
+            recipesContainer.textContent = "";
+          }
+          let recipesCardElements = createRecipesCards(newRecipesList);
+          recipesCardElements.forEach((recipeCardElement) => {
+            recipesContainer.appendChild(recipeCardElement);
+          })
+        } else {
+          if(lastInputValueLength > e.target.value.length && e.target.value.length === 2) {
+            const activesFilters = getActivesFilters();
+            const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+            const recipesCardElements = createRecipesCards(recipesByFilters);
+            const recipesContainer = document.querySelector('#recipes_container');
+            recipesContainer.textContent = "";
+            recipesCardElements.forEach((recipeCardElement) => {
+              recipesContainer.appendChild(recipeCardElement);
+            })
+          }
+        }
+        lastInputValueLength = e.target.value.length;
       })
 
 
@@ -272,7 +304,7 @@ window.addEventListener('load', () => {
         miniSearchBarInput.addEventListener('input', () => {
           const filtersElements = document.querySelectorAll(`#${type}s_content_filter > div`);
           filtersElements.forEach((filterElement) => {
-            if(!filterElement.textContent.includes(miniSearchBarInput.value)) {
+            if(!filterElement.textContent.toLowerCase().includes(miniSearchBarInput.value.toLowerCase())) {
               filterElement.classList.remove('active');
             } else {
               filterElement.classList.add('active');
