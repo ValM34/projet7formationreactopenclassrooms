@@ -86,7 +86,6 @@ function createFilterElement(filtersList, filtersSelected = []) {
     // Si filterSelected n'est pas vide, je vérifie pour chaque filtre s'il est égal à un des filtres sélectionnés
     if(filtersSelected.length > 0) {
       filtersElementsList.forEach((filterElement) => {
-        console.log(filterElement.filterElement.textContent);
         if(filtersSelected.includes(filterElement.filterElement.textContent)) {
           filterElement.filterElement.classList.add("is-selected");
         }
