@@ -129,7 +129,7 @@ window.addEventListener('load', () => {
             recipesContainer.appendChild(recipeCardElement);
           })
         } else {
-          if(lastInputValueLength > e.target.value.length && e.target.value.length === 2) {
+          if(lastInputValueLength > e.target.value.length) {
             const activesFilters = getActivesFilters();
             const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
             const recipesCardElements = createRecipesCards(recipesByFilters);
@@ -256,8 +256,9 @@ window.addEventListener('load', () => {
                   imgElement.addEventListener("click", () => {
                     divElement.remove();
                     const activesFilters = getActivesFilters();
-                    let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-                    let recipesCardElements = createRecipesCards(recipesCard);
+                    const recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+                    console.log(recipesCard)
+                    const recipesCardElements = createRecipesCards(recipesCard);
                     const recipesContainer = document.querySelector('#recipes_container');
                     recipesContainer.textContent = "";
                     recipesCardElements.forEach((recipeCardElement) => {
