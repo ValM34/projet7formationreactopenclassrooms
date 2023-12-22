@@ -87,7 +87,7 @@ window.addEventListener('load', () => {
         }
 
         newRecipesList = recipesThatMatchWithUstensilsFilters;
-
+        
         return newRecipesList;
       }
 
