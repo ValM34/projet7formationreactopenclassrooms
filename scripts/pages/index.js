@@ -307,7 +307,7 @@ window.addEventListener('load', () => {
           }
 
           // Display/hide miniSearchBar
-          const filterInputContainer = document.querySelector(`.filter-input-container[filter-input-container-type=${type}]`);
+          const filterInputContainer = document.querySelector(`.filter-input-container[data-filter-input-container-type=${type}]`);
           filterInputContainer.classList.toggle('active');
           const filterInput = document.querySelector(`#mini_search_bar_${type}`);
           filterInput.value = "";
@@ -369,7 +369,7 @@ window.addEventListener('load', () => {
               }
 
               // Hide miniSearchBar
-              const filterInputContainer = document.querySelector(`.filter-input-container[filter-input-container-type=${type}]`);
+              const filterInputContainer = document.querySelector(`.filter-input-container[data-filter-input-container-type=${type}]`);
               filterInputContainer.classList.remove('active');
               const filterInput = document.querySelector(`#mini_search_bar_${type}`);
               filterInput.value = "";

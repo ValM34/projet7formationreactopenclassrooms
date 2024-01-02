@@ -16,7 +16,7 @@ function createRecipesCards(recipes) {
   
     const recipeCardContent = document.createElement("div");
     recipeCardContent.classList.add("recipe-card-content");
-    const recipeTitle = document.createElement("div");
+    const recipeTitle = document.createElement("h2");
     recipeTitle.classList.add("recipe-title");
     recipeTitle.textContent = recipe.name;
     recipeCardContent.appendChild(recipeTitle);
