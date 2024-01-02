@@ -1,3 +1,38 @@
+// Setup cache
+let isCacheActive = true;
+const expirationTime = 604800000;
+
+// Functions cache
+function createId(filters, searchInput = "") {
+  let id = '';
+  let ingredientsId = filters.ingredientsFilters.sort().join('');
+  let applianceId = filters.appliancesFilters;
+  let ustensilsId = filters.ustensilsFilters.sort().join('');
+  id = 'id_' + ingredientsId + applianceId + ustensilsId + searchInput;
+
+  return id;
+}
+
+function setSearchInLocalStorage(id, recipesList) {
+  localStorage.setItem(id, JSON.stringify({ recipesList, createdAt : Date.now() }));
+}
+
+function getSearchInLocalStorage(id){
+  return JSON.parse(localStorage.getItem(id));
+}
+
+function createFiltersId(filters, searchInput = "") {
+  return createId(filters, searchInput) + '_filters';
+}
+
+function getFiltersSearchInLocalStorage(filtersId){
+  return JSON.parse(localStorage.getItem(filtersId));
+}
+
+function setFiltersSearchInLocalStorage(id, filtersLists) {
+  localStorage.setItem(id, JSON.stringify({ filtersLists, createdAt : Date.now() }));
+}
+
 window.addEventListener('load', () => {
   fetch('data/recipes.json')
     .then(response => response.json())
@@ -5,90 +40,139 @@ window.addEventListener('load', () => {
 
       // Show all recipes on page load
       const activesFilters = getActivesFilters();
-      let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-      let recipesCardElements = createRecipesCards(recipesCard);
+      const id = createId(activesFilters);
+      const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+      //localStorage.clear(); //@TODO supprimer
+      let recipesCardElements = createRecipesCards(recipesByFilters);
       const recipesContainer = document.querySelector('#recipes_container');
       recipesCardElements.forEach((recipeCardElement) => {
         recipesContainer.appendChild(recipeCardElement);
       })
 
-      function getFilters(recipes) {
+      function getFilters(recipes, activesFilters) {
         const mainSearchBar = document.querySelector("#search");
-        const recipeListByInputValue = searchRecipes(mainSearchBar.value, recipes);
-        function addToList(filtersList, filter) {
-          if(!filtersList.includes(filter)) {
-            filtersList.push(filter);
+        const filtersId = createFiltersId(activesFilters, mainSearchBar.value);
+        let cache = isCacheActive ? getFiltersSearchInLocalStorage(filtersId) : null;
+        if(cache && isCacheActive) {
+          const cacheIsExpired = Date.now() - cache.createdAt > expirationTime;
+          if(cacheIsExpired) {
+            localStorage.removeItem(id);
+            cache = null;
           }
         }
-        const ingredientsList = [];
-        const appliancesList = [];
-        const ustensilsList = [];
-        recipeListByInputValue.forEach((recipe) => {
-          // Push list of ingredients
-          recipe.ingredients.forEach((ingredient) => {
-            addToList(ingredientsList, ingredient.ingredient);
+        if(!cache) {
+          const mainSearchBar = document.querySelector("#search");
+          const recipeListByInputValue = searchRecipes(mainSearchBar.value, recipes);
+          function addToList(filtersList, filter) {
+            if(!filtersList.includes(filter)) {
+              filtersList.push(filter);
+            }
+          }
+          const ingredientsList = [];
+          const appliancesList = [];
+          const ustensilsList = [];
+          recipeListByInputValue.forEach((recipe) => {
+            // Push list of ingredients
+            recipe.ingredients.forEach((ingredient) => {
+              addToList(ingredientsList, ingredient.ingredient);
+            });
+            // Push list of appliances
+            addToList(appliancesList, recipe.appliance);
+            // Push list of ustensils
+            recipe.ustensils.forEach((ustensil) => {
+              addToList(ustensilsList, ustensil);
+            });
           });
-          // Push list of appliances
-          addToList(appliancesList, recipe.appliance);
-          // Push list of ustensils
-          recipe.ustensils.forEach((ustensil) => {
-            addToList(ustensilsList, ustensil);
-          });
-        });
 
-        return { ingredientsList, appliancesList, ustensilsList };
+          if(isCacheActive) {
+            setFiltersSearchInLocalStorage(filtersId, { ingredientsList, appliancesList, ustensilsList });
+            console.log('cache was not used for find filters list');
+          } else {
+            console.log('cache is not active');
+          }
+  
+          return { ingredientsList, appliancesList, ustensilsList };
+        } else {
+          console.log('cache was used for find filters list');
+
+          return cache.filtersLists;
+        }
       }
 
       function getRecipesByFilters(recipes, ingredientsFilters = [], appliancesFilters = [], ustensilsFilters = []) {
-        let newRecipesList = [];
-        let recipesThatMatchWithIngredientsFilters = [];
-        let recipesThatMatchWithAppliancesFilters = [];
-        let recipesThatMatchWithUstensilsFilters = [];
-
+        const activesFilters = { ingredientsFilters, appliancesFilters, ustensilsFilters };
         const mainSearchBar = document.querySelector("#search");
-        const recipeListByInputValue = searchRecipes(mainSearchBar.value, recipes);
-
-        // Push recipes by filters
-        function filter (recipe, filtersListByRecipe, selectedFiltersList, arrayToModify) {
-          if (selectedFiltersList.every((selectedFilter) => filtersListByRecipe.includes(selectedFilter))) {
-            arrayToModify.push(recipe);
+        const id = createId(activesFilters, mainSearchBar.value);
+        let cache = isCacheActive ? getSearchInLocalStorage(id) : null;
+        if(cache && isCacheActive) {
+          const cacheIsExpired = Date.now() - cache.createdAt > expirationTime;
+          if(cacheIsExpired) {
+            localStorage.removeItem(id);
+            cache = null;
           }
         }
-
-        // Filter recipes based on selected ingredients
-        if (ingredientsFilters.length > 0) {
-          recipeListByInputValue.forEach((recipe) => {
-            const ingredientsListByRecipe = [];
-            recipe.ingredients.forEach((ingredient) => {
-              ingredientsListByRecipe.push(ingredient.ingredient);
+        if(!cache) {
+          let newRecipesList = [];
+          let recipesThatMatchWithIngredientsFilters = [];
+          let recipesThatMatchWithAppliancesFilters = [];
+          let recipesThatMatchWithUstensilsFilters = [];
+  
+          const mainSearchBar = document.querySelector("#search");
+          const recipeListByInputValue = searchRecipes(mainSearchBar.value, recipes);
+  
+          // Push recipes by filters
+          function filter (recipe, filtersListByRecipe, selectedFiltersList, arrayToModify) {
+            if (selectedFiltersList.every((selectedFilter) => filtersListByRecipe.includes(selectedFilter))) {
+              arrayToModify.push(recipe);
+            }
+          }
+  
+          // Filter recipes based on selected ingredients
+          if (ingredientsFilters.length > 0) {
+            recipeListByInputValue.forEach((recipe) => {
+              const ingredientsListByRecipe = [];
+              recipe.ingredients.forEach((ingredient) => {
+                ingredientsListByRecipe.push(ingredient.ingredient);
+              });
+              filter (recipe, ingredientsListByRecipe, ingredientsFilters, recipesThatMatchWithIngredientsFilters);
             });
-            filter (recipe, ingredientsListByRecipe, ingredientsFilters, recipesThatMatchWithIngredientsFilters);
-          });
-        } else {
-          recipesThatMatchWithIngredientsFilters = recipeListByInputValue;
-        }
+          } else {
+            recipesThatMatchWithIngredientsFilters = recipeListByInputValue;
+          }
+  
+          // Filter recipes based on selected appliances
+          if (appliancesFilters.length > 0) {
+            recipesThatMatchWithIngredientsFilters.forEach((recipe) => {
+              filter (recipe, recipe.appliance, appliancesFilters, recipesThatMatchWithAppliancesFilters);
+            });
+          } else {
+            recipesThatMatchWithAppliancesFilters = recipesThatMatchWithIngredientsFilters;
+          }
+  
+          // Filter recipes based on selected ustensils
+          if (ustensilsFilters.length > 0) {
+            recipesThatMatchWithAppliancesFilters.forEach((recipe) => {
+              filter (recipe, recipe.ustensils, ustensilsFilters, recipesThatMatchWithUstensilsFilters);
+            });
+          } else {
+            recipesThatMatchWithUstensilsFilters = recipesThatMatchWithAppliancesFilters;
+          }
+  
+          newRecipesList = recipesThatMatchWithUstensilsFilters;
 
-        // Filter recipes based on selected appliances
-        if (appliancesFilters.length > 0) {
-          recipesThatMatchWithIngredientsFilters.forEach((recipe) => {
-            filter (recipe, recipe.appliance, appliancesFilters, recipesThatMatchWithAppliancesFilters);
-          });
+          if(isCacheActive) {
+            console.log('cache not used for find recipes, save cache');
+            setSearchInLocalStorage(id, newRecipesList);
+          } else {
+            console.log('cache is not active');
+          }
+          
+          return newRecipesList;
         } else {
-          recipesThatMatchWithAppliancesFilters = recipesThatMatchWithIngredientsFilters;
+          console.log('cache used for find recipes');
+          
+          return cache.recipesList;
         }
-
-        // Filter recipes based on selected ustensils
-        if (ustensilsFilters.length > 0) {
-          recipesThatMatchWithAppliancesFilters.forEach((recipe) => {
-            filter (recipe, recipe.ustensils, ustensilsFilters, recipesThatMatchWithUstensilsFilters);
-          });
-        } else {
-          recipesThatMatchWithUstensilsFilters = recipesThatMatchWithAppliancesFilters;
-        }
-
-        newRecipesList = recipesThatMatchWithUstensilsFilters;
-        
-        return newRecipesList;
       }
 
       function searchRecipes(inputValue, recipes) {
@@ -117,14 +201,13 @@ window.addEventListener('load', () => {
         if(e.target.value.length >= 3) {
           const activesFilters = getActivesFilters();
           const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-          const newRecipesList = searchRecipes(e.target.value, recipesByFilters);
           const recipesContainer = document.querySelector('#recipes_container');
-          if(newRecipesList.length === 0) {
+          if(recipesByFilters.length === 0) {
             recipesContainer.textContent = `Aucune recette ne contient "${e.target.value}" vous pouvez chercher « tarte aux pommes », « poisson », etc.`;
           } else {
             recipesContainer.textContent = "";
           }
-          let recipesCardElements = createRecipesCards(newRecipesList);
+          let recipesCardElements = createRecipesCards(recipesByFilters);
           recipesCardElements.forEach((recipeCardElement) => {
             recipesContainer.appendChild(recipeCardElement);
           })
@@ -161,12 +244,11 @@ window.addEventListener('load', () => {
       }
 
       function handleDropdown(type) {
-        const ingredientDropdownFilters = document.querySelector(`#select_${type}s_filter`);
-        ingredientDropdownFilters.addEventListener('click', () => {
+        const dropdownFilters = document.querySelector(`#select_${type}s_filter`);
+        dropdownFilters.addEventListener('click', () => {
           const activesFilters = getActivesFilters();
-          let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-          const { ingredientsList, appliancesList, ustensilsList } = getFilters(recipesCard);
-
+          const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+          const { ingredientsList, appliancesList, ustensilsList } = getFilters(recipesByFilters, activesFilters);
           const listOfFilters = document.querySelector(`#${type}s_content_filter`);
           if(listOfFilters.classList.contains('active')) {
             listOfFilters.textContent = "";
@@ -256,9 +338,8 @@ window.addEventListener('load', () => {
                   imgElement.addEventListener("click", () => {
                     divElement.remove();
                     const activesFilters = getActivesFilters();
-                    const recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-                    console.log(recipesCard)
-                    const recipesCardElements = createRecipesCards(recipesCard);
+                    const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+                    const recipesCardElements = createRecipesCards(recipesByFilters);
                     const recipesContainer = document.querySelector('#recipes_container');
                     recipesContainer.textContent = "";
                     recipesCardElements.forEach((recipeCardElement) => {
@@ -270,8 +351,8 @@ window.addEventListener('load', () => {
                   listOfFilters.classList.toggle('active');
     
                   const activesFilters = getActivesFilters();
-                  let recipesCard = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-                  let recipesCardElements = createRecipesCards(recipesCard);
+                  const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
+                  let recipesCardElements = createRecipesCards(recipesByFilters);
                   const recipesContainer = document.querySelector('#recipes_container');
                   recipesContainer.textContent = "";
                   recipesCardElements.forEach((recipeCardElement) => {
