@@ -1,5 +1,5 @@
 // Setup cache
-let isCacheActive = true;
+let isCacheActive = false;
 const expirationTime = 604800000;
 
 // Functions cache
@@ -42,13 +42,12 @@ window.addEventListener('load', () => {
       const activesFilters = getActivesFilters();
       const id = createId(activesFilters);
       const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
-      //localStorage.clear(); //@TODO supprimer
       let recipesCardElements = createRecipesCards(recipesByFilters);
       const recipesContainer = document.querySelector('#recipes_container');
       recipesCardElements.forEach((recipeCardElement) => {
         recipesContainer.appendChild(recipeCardElement);
-      })
-
+      });
+      
       function getFilters(recipes, activesFilters) {
         const mainSearchBar = document.querySelector("#search");
         const filtersId = createFiltersId(activesFilters, mainSearchBar.value);
@@ -199,9 +198,11 @@ window.addEventListener('load', () => {
       const mainSearchBar = document.querySelector("#search");
       mainSearchBar.addEventListener('input', (e) => {
         if(e.target.value.length >= 3) {
+          console.time();
           const activesFilters = getActivesFilters();
           const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
           const recipesContainer = document.querySelector('#recipes_container');
+          console.timeEnd();
           if(recipesByFilters.length === 0) {
             recipesContainer.textContent = `Aucune recette ne contient "${e.target.value}" vous pouvez chercher « tarte aux pommes », « poisson », etc.`;
           } else {
@@ -225,7 +226,6 @@ window.addEventListener('load', () => {
         }
         lastInputValueLength = e.target.value.length;
       })
-
 
       function getActivesFilters () {
         const ingredientsFiltersDOM = document.querySelectorAll('[filter-type=ingredient]');
