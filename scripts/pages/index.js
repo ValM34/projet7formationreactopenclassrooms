@@ -1,5 +1,5 @@
 // Setup cache
-let isCacheActive = false;
+let isCacheActive = true;
 const expirationTime = 604800000;
 
 // Functions cache
