@@ -92,7 +92,7 @@ window.addEventListener('load', () => {
   
           return { ingredientsList, appliancesList, ustensilsList };
         } else {
-          console.log('cache was used for find filters list');
+          //console.log('cache was used for find filters list');
 
           return cache.filtersLists;
         }
@@ -160,7 +160,7 @@ window.addEventListener('load', () => {
           newRecipesList = recipesThatMatchWithUstensilsFilters;
 
           if(isCacheActive) {
-            console.log('cache not used for find recipes, save cache');
+            //console.log('cache not used for find recipes, save cache');
             setSearchInLocalStorage(id, newRecipesList);
           } else {
             console.log('cache is not active');
@@ -168,7 +168,7 @@ window.addEventListener('load', () => {
           
           return newRecipesList;
         } else {
-          console.log('cache used for find recipes');
+          //console.log('cache used for find recipes');
           
           return cache.recipesList;
         }
@@ -198,11 +198,12 @@ window.addEventListener('load', () => {
       const mainSearchBar = document.querySelector("#search");
       mainSearchBar.addEventListener('input', (e) => {
         if(e.target.value.length >= 3) {
-          console.time();
+          // console.time();
           const activesFilters = getActivesFilters();
           const recipesByFilters = getRecipesByFilters(recipes, activesFilters.ingredientsFilters, activesFilters.appliancesFilters, activesFilters.ustensilsFilters);
           const recipesContainer = document.querySelector('#recipes_container');
-          console.timeEnd();
+          // console.log('Calcul du nombre de millisecondes nécessaire pour trouver les recettes');
+          // console.timeEnd();
           if(recipesByFilters.length === 0) {
             recipesContainer.textContent = `Aucune recette ne contient "${e.target.value}" vous pouvez chercher « tarte aux pommes », « poisson », etc.`;
           } else {
